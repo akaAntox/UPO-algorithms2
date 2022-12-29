@@ -25,8 +25,8 @@ public class AdjMatrixDirWeight implements WeightedGraph {
     private int time = 0;
 
     public AdjMatrixDirWeight() {
-        matrix = new double[size()][size()];
         vertices = new ArrayList<>();
+        matrix = new double[size()][size()];
     }
 
     @Override
@@ -42,9 +42,13 @@ public class AdjMatrixDirWeight implements WeightedGraph {
     @Override
     public int addVertex(String vertex) {
         vertices.add(vertex);
-        var newMatrix = new double[size()][size()];
-        System.arraycopy(matrix, 0, newMatrix, 0, size());
-        return size() - 1;
+        var backupMatrix = matrix.clone();
+        int index = size() - 1;
+        matrix = new double[size()][size()];
+        for (int i = 0; i < index; i++)
+            System.arraycopy(backupMatrix[i], 0, matrix[i], 0, backupMatrix.length);
+
+        return index;
     }
 
     @Override
@@ -89,19 +93,19 @@ public class AdjMatrixDirWeight implements WeightedGraph {
         var forest = new VisitForest(this, VisitType.BFS);
         Queue<String> verticesQueue = new LinkedList<>();
 
-        forest.setColor(vertex, Color.GRAY);
+        forest.setColor(vertex, Color.WHITE);
         verticesQueue.add(vertex);
 
         while (!verticesQueue.isEmpty()) {
-            for (var adj : getAdjacent(vertex)) {
+            for (var adj : getAdjacent(verticesQueue.peek())) {
                 if (forest.getColor(adj) == Color.WHITE) {
                     forest.setColor(adj, Color.GRAY);
-                    forest.setParent(adj, vertex);
+                    forest.setParent(adj, verticesQueue.peek());
                     verticesQueue.add(adj);
                 }
             }
-            forest.setColor(vertex, Color.BLACK);
-            verticesQueue.remove(vertex);
+            forest.setColor(verticesQueue.peek(), Color.BLACK);
+            verticesQueue.remove(verticesQueue.peek());
         }
 
         return forest;
@@ -158,6 +162,7 @@ public class AdjMatrixDirWeight implements WeightedGraph {
         for (var element : getAdjacent(vertex)) {
             if (forest.getColor(element) == Color.WHITE) {
                 forest.setParent(element, vertex);
+                recDFSVisit(forest, element);
             }
         }
 
@@ -230,9 +235,33 @@ public class AdjMatrixDirWeight implements WeightedGraph {
 
     @Override
     public void removeVertex(String vertex) throws NoSuchElementException {
-        vertices.remove(vertex);
-        var newMatrix = new double[size()][size()];
-        System.arraycopy(matrix, 0, newMatrix, 0, size());
+        int index = getVertexIndex(vertex);
+        if (index > -1) {
+            vertices.remove(vertex);
+            matrix = escapeColumn(index);
+        } else
+            throw new NoSuchElementException("Cannot remove an unexisting vertex.");
+    }
+
+    private double[][] escapeColumn(int escapeIndex) {
+        double[][] newMatrix = new double[matrix.length - 1][matrix.length - 1];
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix.length; j++) {
+
+                if (i != escapeIndex && j != escapeIndex) {
+
+                    if ((i > escapeIndex) && (j > escapeIndex)) {
+                        newMatrix[i - 1][j - 1] = matrix[i][j];
+                    } else if (i > escapeIndex) {
+                        newMatrix[i - 1][j] = matrix[i][j];
+                    } else if (j > escapeIndex) {
+                        newMatrix[i][j - 1] = matrix[i][j];
+                    } else
+                        newMatrix[i][j] = matrix[i][j];
+                }
+            }
+        }
+        return newMatrix;
     }
 
     @Override
@@ -246,7 +275,7 @@ public class AdjMatrixDirWeight implements WeightedGraph {
         var forest = getDFSTOTForest(vertices.get(0));
         var transposedGraph = getTransposedGraph(forest);
 
-        forest = new VisitForest(this, VisitType.DFS);
+        forest = new VisitForest(transposedGraph, VisitType.DFS);
         for (var element : transposedGraph.vertices) {
             if (forest.getColor(element) == Color.WHITE) {
                 components.add(getDFSTree(forest, element));
@@ -297,9 +326,11 @@ public class AdjMatrixDirWeight implements WeightedGraph {
         for (var element : sortedArray)
             transposedGraph.vertices.add(getVertexLabel(Arrays.asList(array).indexOf(element)));
 
+        transposedGraph.matrix = new double[matrix.length][matrix.length];
+
         for (var i = 0; i < size(); i++)
             for (var j = 0; j < size(); j++)
-                transposedGraph.matrix[i][j] = matrix[j][i];
+                transposedGraph.matrix[j][i] = matrix[i][j];
 
         return transposedGraph;
     }
@@ -359,6 +390,8 @@ public class AdjMatrixDirWeight implements WeightedGraph {
     @Override
     public WeightedGraph getFloydWarshallShortestPaths() throws UnsupportedOperationException {
         var graph = new AdjMatrixDirWeight();
+        graph.vertices.addAll(vertices);
+        graph.matrix = new double[size()][size()];
         setMatrixEdges(graph);
         setShortestPath(graph);
         return graph;
