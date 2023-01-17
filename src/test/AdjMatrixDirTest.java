@@ -22,14 +22,6 @@ public class AdjMatrixDirTest {
             matrixDir.addVertex(new String(new char[] { a }));
     }
 
-    private void addEdges() {
-        matrixDir.addEdge("A", "B");
-        matrixDir.addEdge("A", "C");
-        matrixDir.addEdge("D", "B");
-        matrixDir.addEdge("E", "A");
-        matrixDir.addEdge("E", "F");
-    }
-
     @Test
     public void testAddVertex() {
         assertEquals(0, matrixDir.addVertex("A"));
@@ -123,7 +115,11 @@ public class AdjMatrixDirTest {
     public void testDFSTree() {
         int[] timings = { 6, 3, 5, 8, 12, 11 };
         populateGraph(6);
-        addEdges();
+        matrixDir.addEdge("A", "B");
+        matrixDir.addEdge("A", "C");
+        matrixDir.addEdge("D", "B");
+        matrixDir.addEdge("E", "A");
+        matrixDir.addEdge("E", "F");
         var forest = matrixDir.getDFSTOTForest("A");
         for (int i = 0; i < matrixDir.size(); i++)
             assertEquals(timings[i], forest.getEndTime(matrixDir.getVertexLabel(i)));
@@ -133,7 +129,11 @@ public class AdjMatrixDirTest {
     @Test
     public void testBFSTree() {
         populateGraph(6);
-        addEdges();
+        matrixDir.addEdge("A", "B");
+        matrixDir.addEdge("A", "C");
+        matrixDir.addEdge("D", "B");
+        matrixDir.addEdge("E", "A");
+        matrixDir.addEdge("E", "F");
         matrixDir.addEdge("A", "E");
         matrixDir.addEdge("B", "D");
         var visit = matrixDir.getBFSTree("A");
@@ -149,32 +149,66 @@ public class AdjMatrixDirTest {
 
     @Test
     public void testStronglyConnectedComponents() {
-        populateGraph(6);
-        matrixDir.addEdge("A", "B");
-        matrixDir.addEdge("A", "C");
-        matrixDir.addEdge("D", "E");
-        matrixDir.addEdge("E", "F");
+        populateGraph(10);
+        matrixDir.addEdge("A", "F");
+        matrixDir.addEdge("A", "E");
+        matrixDir.addEdge("B", "A");
+        matrixDir.addEdge("C", "B");
+        matrixDir.addEdge("C", "D");
+        matrixDir.addEdge("C", "G");
+        matrixDir.addEdge("D", "C");
+        matrixDir.addEdge("E", "A");
+        matrixDir.addEdge("E", "H");
+        matrixDir.addEdge("F", "B");
+        matrixDir.addEdge("F", "E");
+        matrixDir.addEdge("F", "H");
+        matrixDir.addEdge("G", "C");
+        matrixDir.addEdge("G", "F");
+        matrixDir.addEdge("G", "I");
+        matrixDir.addEdge("I", "H");
+        matrixDir.addEdge("I", "J");
+        matrixDir.addEdge("J", "I");
 
         var components = matrixDir.stronglyConnectedComponents();
-        assertEquals(2, components.size());
-        components.forEach(c -> assertEquals(3, c.size()));
+        assertEquals(4, components.size());
     }
 
     @Test
     public void testEdgeWeight() {
         populateGraph(6);
-        addEdges();
+        matrixDir.addEdge("A", "B");
+        matrixDir.addEdge("A", "C");
+        matrixDir.addEdge("D", "B");
+        matrixDir.addEdge("E", "A");
+        matrixDir.addEdge("E", "F");
         assertEquals(1.0, matrixDir.getEdgeWeight("A", "B"));
         assertThrows(NoSuchElementException.class, () -> matrixDir.getEdgeWeight("A", "D"));
     }
 
     @Test
     public void testRemoves() {
-        populateGraph(6);
-        addEdges();
-        matrixDir.removeVertex("A");
-        assertThrows(IllegalArgumentException.class, () -> matrixDir.containsEdge("A", "E"));
-        assertFalse(matrixDir.containsVertex("A"));
+        populateGraph(10);
+        matrixDir.addEdge("A", "F");
+        matrixDir.addEdge("A", "E");
+        matrixDir.addEdge("B", "A");
+        matrixDir.addEdge("C", "B");
+        matrixDir.addEdge("C", "D");
+        matrixDir.addEdge("C", "G");
+        matrixDir.addEdge("D", "C");
+        matrixDir.addEdge("E", "A");
+        matrixDir.addEdge("E", "H");
+        matrixDir.addEdge("F", "B");
+        matrixDir.addEdge("F", "E");
+        matrixDir.addEdge("F", "H");
+        matrixDir.addEdge("G", "C");
+        matrixDir.addEdge("G", "F");
+        matrixDir.addEdge("G", "I");
+        matrixDir.addEdge("I", "H");
+        matrixDir.addEdge("I", "J");
+        matrixDir.addEdge("J", "I");
+        matrixDir.removeVertex("H");
+        assertThrows(IllegalArgumentException.class, () -> matrixDir.containsEdge("F", "H"));
+        assertFalse(matrixDir.containsVertex("H"));
         var cc = matrixDir.stronglyConnectedComponents();
         assertEquals(3, cc.size());
     }

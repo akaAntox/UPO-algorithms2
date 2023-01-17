@@ -278,30 +278,29 @@ public class AdjMatrixDirWeight implements WeightedGraph {
         forest = new VisitForest(transposedGraph, VisitType.DFS);
         for (var element : transposedGraph.vertices) {
             if (forest.getColor(element) == Color.WHITE) {
-                components.add(getDFSTree(forest, element));
+                components.add(getDFSTree(forest, element, transposedGraph));
             }
         }
 
         return components;
     }
 
-    private Set<String> getDFSTree(VisitForest forest, String vertex) {
+    private Set<String> getDFSTree(VisitForest forest, String vertex, WeightedGraph transposedGraph) {
         Set<String> setCFC = new HashSet<>();
-        recDFSVisit(forest, vertex, setCFC);
-
+        recDFSVisit(forest, vertex, transposedGraph, setCFC);
         return setCFC;
     }
 
-    private void recDFSVisit(VisitForest forest, String vertex, Set<String> setCFC) {
+    private void recDFSVisit(VisitForest forest, String vertex, WeightedGraph transposedGraph, Set<String> setCFC) {
         forest.setColor(vertex, Color.GRAY);
         forest.setStartTime(vertex, time);
         time++;
 
         setCFC.add(vertex);
-        for (var element : getAdjacent(vertex)) {
+        for (var element : transposedGraph.getAdjacent(vertex)) {
             if (forest.getColor(element) == Color.WHITE) {
                 forest.setParent(element, vertex);
-                recDFSVisit(forest, element, setCFC);
+                recDFSVisit(forest, element, transposedGraph, setCFC);
             }
         }
 
@@ -330,7 +329,8 @@ public class AdjMatrixDirWeight implements WeightedGraph {
 
         for (var i = 0; i < size(); i++)
             for (var j = 0; j < size(); j++)
-                transposedGraph.matrix[j][i] = matrix[i][j];
+                transposedGraph.matrix[j][i] = matrix[getVertexIndex(transposedGraph.getVertexLabel(i))][getVertexIndex(
+                        transposedGraph.getVertexLabel(j))];
 
         return transposedGraph;
     }
