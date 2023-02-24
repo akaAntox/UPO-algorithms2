@@ -24,3 +24,5 @@ hs_err_pid*
 replay_pid*
 .vscode/settings.json
 src/upo/additionalstructures/Stack.java
+.vscode/tasks.json
+es_aggiuntivo.txt
