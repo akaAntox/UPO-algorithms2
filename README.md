@@ -3,3 +3,4 @@
  - Dynamic programming
  - Graph structure
  - Union finds
+ - Huffman algorithm
